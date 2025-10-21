@@ -37,6 +37,25 @@ export const Reader: React.FunctionComponent<RouteComponentProps> = () => {
   const pdfScrollableRef = React.createRef<HTMLDivElement>();
 
   const samplePdfUrl = 'https://arxiv.org/pdf/2112.07873.pdf';
+  const proxiedPdfUrl = React.useMemo(() => {
+    if (typeof window === 'undefined') {
+      return samplePdfUrl;
+    }
+
+    try {
+      const targetUrl = new URL(samplePdfUrl);
+      const currentOrigin = window.location.origin;
+
+      if (targetUrl.origin === currentOrigin) {
+        return targetUrl.href;
+      }
+
+      const params = new URLSearchParams({ url: targetUrl.href });
+      return `${currentOrigin}/proxy-pdf?${params.toString()}`;
+    } catch (error) {
+      return samplePdfUrl;
+    }
+  }, [samplePdfUrl]);
   const sampleS2airsUrl =
     'http://s2airs.prod.s2.allenai.org/v1/pdf_data?pdf_sha=9b79eb8d21c8a832daedbfc6d8c31bebe0da3ed5';
 
@@ -75,7 +94,7 @@ export const Reader: React.FunctionComponent<RouteComponentProps> = () => {
             <Header pdfUrl={samplePdfUrl} />
             <DocumentWrapper
               className="reader__main"
-              file={samplePdfUrl}
+              file={proxiedPdfUrl}
               inputRef={pdfContentRef}
               renderType={RENDER_TYPE.SINGLE_CANVAS}>
               <Outline parentRef={pdfContentRef} />
